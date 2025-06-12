@@ -1,0 +1,74 @@
+body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#controls {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.8);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    max-height: 70vh;
+    overflow-y: auto;
+    width: 250px;
+}
+
+h2 {
+    color: #ffdd44;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.planet {
+    margin-bottom: 10px;
+    padding: 5px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+.speed-display {
+    font-size: 11px;
+    color: #ccc;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 2px;
+    font-size: 12px;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+#tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    pointer-events: none;
+    display: none;
+    font-size: 11px;
+}

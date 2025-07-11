@@ -3,7 +3,8 @@ let scene, camera, renderer, sun, clock
 let planets = []
 let isPaused = false
 let globalSpeedMultiplier = 1.0
-let cameraAngle = 0
+let cameraAngle = 0.5 // Horizontal rotation angle
+let cameraPhi = Math.PI / 3 // Vertical angle (60 degrees from top)
 let cameraDistance = 50
 let orbitTrails = []
 let planetLabels = []
@@ -149,7 +150,9 @@ function init () {
     0.1,
     1000
   )
-  camera.position.set(0, 30, 50)
+
+  // Set initial camera position using spherical coordinates
+  updateCameraPosition()
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -181,6 +184,15 @@ function init () {
     hideLoadingScreen()
     animate()
   }, 2000)
+}
+
+function updateCameraPosition () {
+  camera.position.x =
+    cameraDistance * Math.sin(cameraPhi) * Math.cos(cameraAngle)
+  camera.position.y = cameraDistance * Math.cos(cameraPhi)
+  camera.position.z =
+    cameraDistance * Math.sin(cameraPhi) * Math.sin(cameraAngle)
+  camera.lookAt(0, 0, 0)
 }
 
 function showLoadingScreen () {
@@ -453,16 +465,12 @@ function setupMouseControls () {
       const dy = e.clientY - lastMouse.y
       const speed = 0.01
 
+      // Update spherical coordinates
       cameraAngle -= dx * speed
-      const phi = Math.acos(camera.position.y / cameraDistance) - dy * speed
-      const clampedPhi = Math.max(0.1, Math.min(Math.PI - 0.1, phi))
+      cameraPhi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraPhi - dy * speed))
 
-      camera.position.x =
-        cameraDistance * Math.sin(clampedPhi) * Math.cos(cameraAngle)
-      camera.position.y = cameraDistance * Math.cos(clampedPhi)
-      camera.position.z =
-        cameraDistance * Math.sin(clampedPhi) * Math.sin(cameraAngle)
-      camera.lookAt(0, 0, 0)
+      // Update camera position
+      updateCameraPosition()
 
       lastMouse = { x: e.clientX, y: e.clientY }
     }
@@ -483,8 +491,8 @@ function setupMouseControls () {
     cameraDistance *= zoom
     cameraDistance = Math.max(15, Math.min(100, cameraDistance))
 
-    camera.position.multiplyScalar(zoom)
-    camera.lookAt(0, 0, 0)
+    // Update camera position using spherical coordinates
+    updateCameraPosition()
   })
 
   // Planet clicking
@@ -596,21 +604,29 @@ function resetSimulation () {
 
 function setCameraView (view) {
   const duration = 1000 // Animation duration in ms
-  const startPos = camera.position.clone()
-  let targetPos
+  let targetDistance, targetAngle, targetPhi
 
   switch (view) {
     case 'top':
-      targetPos = new THREE.Vector3(0, 60, 0)
+      targetDistance = 60
+      targetAngle = cameraAngle // Keep current horizontal angle
+      targetPhi = 0.1 // Almost straight down
       break
     case 'side':
-      targetPos = new THREE.Vector3(60, 0, 0)
+      targetDistance = 60
+      targetAngle = cameraAngle // Keep current horizontal angle
+      targetPhi = Math.PI / 2 // Side view
       break
-    default:
-      targetPos = new THREE.Vector3(0, 30, 50)
+    default: // Slight angle for nice default view
+      targetDistance = 50
+      targetAngle = 0.5
+      targetPhi = Math.PI / 3 // 60 degrees from top
   }
 
-  cameraDistance = targetPos.length()
+  // Store initial values
+  const startDistance = cameraDistance
+  const startAngle = cameraAngle
+  const startPhi = cameraPhi
 
   // Smooth camera transition
   const startTime = Date.now()
@@ -619,8 +635,13 @@ function setCameraView (view) {
     const progress = Math.min(elapsed / duration, 1)
     const eased = easeInOutCubic(progress)
 
-    camera.position.lerpVectors(startPos, targetPos, eased)
-    camera.lookAt(0, 0, 0)
+    // Interpolate spherical coordinates
+    cameraDistance = startDistance + (targetDistance - startDistance) * eased
+    cameraAngle = startAngle + (targetAngle - startAngle) * eased
+    cameraPhi = startPhi + (targetPhi - startPhi) * eased
+
+    // Update camera position using spherical coordinates
+    updateCameraPosition()
 
     if (progress < 1) {
       requestAnimationFrame(animateCamera)
